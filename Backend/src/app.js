@@ -1,0 +1,14 @@
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import { Requirement } from "./Requirement.js";
+import { requirementSchema } from "./validation.js";
+export const app = express();
+app.use(helmet());
+app.use(cors({ origin: process.env.CORS_ORIGIN?.split(",") || "http://localhost:3000" }));
+app.use(express.json({ limit:"100kb" }));
+app.get("/api/health", (_req,res)=>res.json({ status:"ok" }));
+app.post("/api/requirements", async (req,res,next)=>{ try { const parsed=requirementSchema.safeParse(req.body); if(!parsed.success) return res.status(400).json({ message:"Invalid requirement payload", errors:parsed.error.flatten() }); const requirement=await Requirement.create(parsed.data); res.status(201).json({ requirement }); } catch(err) { next(err); } });
+app.get("/api/requirements", async (req,res,next)=>{ try { const filter = ["planner","performer","crew"].includes(req.query.category) ? { category:req.query.category } : {}; const requirements=await Requirement.find(filter).sort({createdAt:-1}).limit(100).lean(); res.json({ requirements }); } catch(err) { next(err); } });
+app.get("/api/requirements/:id", async (req,res,next)=>{ try { const requirement=await Requirement.findById(req.params.id).lean(); if(!requirement)return res.status(404).json({message:"Requirement not found"}); res.json({requirement}); } catch(err) { next(err); } });
+app.use((err,_req,res,_next)=>{ if(err.name==="CastError") return res.status(400).json({message:"Invalid requirement ID"}); console.error(err); res.status(500).json({message:"Something went wrong"}); });
