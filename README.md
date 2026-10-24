@@ -1,11 +1,13 @@
 # Eventory
 
-Eventory is a requirement-posting experience for event planners, performers, and event crew. The repository contains two independently started applications:
+Eventory is a requirement-posting experience for event planners, performers, and event crew. It is a single Next.js application: the UI and API routes run from the same server.
 
 ```text
-Eventory/
-├── eventory/   # Next.js frontend
-└── Backend/    # Express API and MongoDB persistence
+eventory/
+├── app/         # Next.js pages and API route handlers
+├── components/  # Requirement wizard and UI primitives
+├── lib/         # MongoDB connection and Zod validation
+└── models/      # Mongoose models
 ```
 
 ## Prerequisites
@@ -24,62 +26,46 @@ Eventory/
    cd Eventory
    ```
 
-2. Configure MongoDB for the API.
+2. Configure MongoDB.
 
-   Create `Backend/.env` with your own values. Do not commit this file.
+   Copy the example environment file and add your own MongoDB connection string. Do not commit `.env.local`.
+
+   ```bash
+   cp .env.example .env.local
+   ```
 
    ```env
    MONGODB_URI=mongodb+srv://<username>:<url-encoded-password>@<cluster>/<database>?retryWrites=true&w=majority
-   PORT=5000
-   CORS_ORIGIN=http://localhost:3000
    ```
 
    In MongoDB Atlas, create a database user with read/write access and allow your development IP under **Network Access**.
 
-3. Install backend dependencies and start the API.
+3. Install dependencies and start Next.js.
 
    ```bash
-   cd Backend
    npm ci
    npm run dev
    ```
 
-   The API starts at `http://localhost:5000`. Confirm it is running by opening `http://localhost:5000/api/health`; it should return `{"status":"ok"}`.
-
-4. Open a second terminal at the repository root, install frontend dependencies, and start Next.js.
-
-   ```bash
-   cd eventory
-   npm ci
-   npm run dev
-   ```
-
-5. Open `http://localhost:3000` in your browser.
-
-   The frontend calls `http://localhost:5000` by default. To use a different API URL, create `eventory/.env.local`:
-
-   ```env
-   NEXT_PUBLIC_API_URL=http://localhost:5000
-   ```
+4. Open `http://localhost:3000` in your browser. Confirm the API is available at `http://localhost:3000/api/health`; it should return `{"status":"ok"}`.
 
 ## Useful commands
 
-Run these from the relevant application directory.
+Run these from the repository root.
 
-| Application | Command | Purpose |
+| Command | Purpose |
 | --- | --- | --- |
-| `eventory` | `npm run dev` | Start the Next.js development server |
-| `eventory` | `npm run lint` | Run frontend linting |
-| `eventory` | `npm run build` | Create a production frontend build |
-| `Backend` | `npm run dev` | Start the Express API with file watching |
-| `Backend` | `npm start` | Start the Express API normally |
+| `npm run dev` | Start the Next.js app and API routes |
+| `npm run lint` | Run linting |
+| `npm run build` | Create a production build |
+| `npm start` | Start the production build |
 
 ## Troubleshooting
 
-- **The page loads but submitting fails:** Make sure the API is running on port `5000`, `MONGODB_URI` is valid, and `CORS_ORIGIN` includes `http://localhost:3000`.
+- **The page loads but submitting fails:** Make sure `MONGODB_URI` is valid and the development server has been restarted after editing `.env.local`.
 - **MongoDB connection fails:** Verify the Atlas password is URL-encoded and that the machine's IP address is allowed by Atlas network access rules.
-- **Port already in use:** Change `PORT` in `Backend/.env`. If you change it from `5000`, set the same URL in `eventory/.env.local` using `NEXT_PUBLIC_API_URL`.
-- **Fresh dependency install fails:** Delete only the affected application's `node_modules` directory, then rerun `npm ci` in that application.
+- **Port already in use:** Start Next.js on another port with `npm run dev -- --port 3001`.
+- **Fresh dependency install fails:** Delete `node_modules`, then rerun `npm ci`.
 
 ## API quick reference
 
@@ -94,4 +80,4 @@ Run these from the relevant application directory.
 
 - Never commit `.env` or `.env.local` files.
 - Never commit `node_modules/` or Next.js build output (`.next/`).
-- Run `npm run lint` and `npm run build` in `eventory/` before opening a pull request.
+- Run `npm run lint` and `npm run build` before opening a pull request.
